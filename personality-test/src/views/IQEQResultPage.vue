@@ -10,6 +10,7 @@
     <template v-else>
       <section class="score-section">
         <h1 class="main-title">IQ & EQ 报告</h1>
+        <p class="test-date" v-if="testDate">测试完成于 {{ testDate }}</p>
         <div class="dual-scores">
           <div v-if="iq" class="score-card iq-card">
             <div class="score-circle iq-circle">{{ iq.iq }}</div>
@@ -48,11 +49,28 @@ import { ref, onMounted } from 'vue'
 
 const iq = ref(null)
 const eq = ref(null)
+const testDate = ref('')
 
 onMounted(() => {
-  try { iq.value = JSON.parse(sessionStorage.getItem('iqeq_iq')) } catch {}
-  try { eq.value = JSON.parse(sessionStorage.getItem('iqeq_eq')) } catch {}
+  // session → localStorage fallback
+  try {
+    const rawIq = sessionStorage.getItem('iqeq_iq') || localStorage.getItem('iqeq_iq')
+    const rawEq = sessionStorage.getItem('iqeq_eq') || localStorage.getItem('iqeq_eq')
+    if (rawIq) iq.value = JSON.parse(rawIq)
+    if (rawEq) eq.value = JSON.parse(rawEq)
+    // 从 profile 读时间戳
+    const rawProfile = sessionStorage.getItem('iqeq_profile') || localStorage.getItem('iqeq_profile')
+    if (rawProfile) {
+      const p = JSON.parse(rawProfile)
+      testDate.value = formatDate(p.ts || Date.now())
+    }
+  } catch {}
 })
+
+function formatDate(ts) {
+  const d = new Date(ts)
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`
+}
 </script>
 
 <style scoped>
@@ -65,7 +83,8 @@ onMounted(() => {
 .go-btn { padding: 0.7rem 2rem; border-radius: 50px; border: none; background: linear-gradient(135deg,#ba96f0,#7c5ce0); color: #fff; font-weight: 700; cursor: pointer; font-family: inherit; }
 
 .score-section { text-align: center; padding: 2.5rem 1.5rem 2rem; }
-.main-title { font-size: 1.8rem; font-weight: 800; color: #ba96f0; margin-bottom: 2rem; }
+.main-title { font-size: 1.8rem; font-weight: 800; color: #ba96f0; margin-bottom: 0.5rem; }
+.test-date { font-size: 0.78rem; color: rgba(240,230,211,0.3); margin-bottom: 1.5rem; }
 .dual-scores { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; max-width: 800px; margin: 0 auto; }
 
 .score-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 20px; padding: 2rem 1.5rem; text-align: center; }

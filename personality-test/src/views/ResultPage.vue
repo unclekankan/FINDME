@@ -43,6 +43,7 @@
           </svg>
         </div>
         <h1 class="hero-title">你的大五人格画像</h1>
+        <p class="hero-date" v-if="testDate">测试完成于 {{ testDate }}</p>
         <p class="hero-desc">
           基于 IPIP（国际人格项目库）科学量表，从五个核心维度刻画你的人格全貌。
         </p>
@@ -108,17 +109,35 @@
 import { computed, onMounted, ref } from 'vue'
 import { dimensions } from '../data/questions.js'
 import { calculateType } from '../utils/scoring.js'
+import { getPersonalityProfile } from '../utils/profile.js'
 const result = ref(null)
+const testDate = ref('')
 
 onMounted(() => {
-  const raw = sessionStorage.getItem('personality_answers')
+  // 1) 从 sessionStorage 读取原始答案
+  let raw = sessionStorage.getItem('personality_answers')
+  // 2) 若无，从 localStorage 读取
+  if (!raw) raw = localStorage.getItem('personality_answers')
   if (raw) {
     try {
       const answers = JSON.parse(raw)
       result.value = calculateType(answers)
-    } catch { result.value = null }
+      testDate.value = formatDate(result.value.ts || Date.now())
+      return
+    } catch {}
+  }
+  // 3) 最后尝试从 profile 读取（有数据但没答案的情况）
+  const profile = getPersonalityProfile()
+  if (profile?.profile) {
+    result.value = profile
+    testDate.value = formatDate(profile.ts || Date.now())
   }
 })
+
+function formatDate(ts) {
+  const d = new Date(ts)
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`
+}
 
 const dimPcts = computed(() =>
   result.value ? dimensions.map((d) => result.value.profile[d.key].percent) : [50, 50, 50, 50, 50]
@@ -179,6 +198,7 @@ const careerSuggestions = computed(() => {
 .spider-container { width: 260px; height: 260px; margin: 0 auto 1.5rem; }
 .spider-chart { width: 100%; height: 100%; }
 .hero-title { font-size: 1.8rem; font-weight: 800; color: #e2c488; margin-bottom: 0.5rem; }
+.hero-date { color: rgba(240,230,211,0.3); font-size: 0.75rem; margin-bottom: 0.5rem; }
 .hero-desc { color: rgba(240,230,211,0.5); font-size: 0.9rem; max-width: 400px; margin: 0 auto; }
 
 /* dims */

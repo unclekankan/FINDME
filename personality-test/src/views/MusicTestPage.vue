@@ -152,6 +152,7 @@ import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { generateNextPair, generateFinalEvaluation } from '../utils/deepseek.js'
 import { fetchSongPreview } from '../utils/audio.js'
+import { setMusicResult } from '../utils/profile.js'
 
 const router = useRouter()
 const TOTAL_ROUNDS = 15
@@ -324,7 +325,7 @@ async function confirmChoice() {
     stage.value = 'evaluating'
     try {
       const result = await generateFinalEvaluation([...history])
-      sessionStorage.setItem('music_taste_result', JSON.stringify(result))
+      setMusicResult(result)
       router.push('/music-result')
     } catch (e) {
       stage.value = 'testing'

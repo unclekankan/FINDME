@@ -41,16 +41,105 @@ function extractJson(text) {
   const braceEnd = raw.lastIndexOf('}')
   if (braceStart !== -1 && braceEnd > braceStart) raw = raw.slice(braceStart, braceEnd + 1)
 
+  // 1) 直接解析
   try { return JSON.parse(raw) } catch {}
 
-  // 修复常见 AI 生成的 JSON 格式问题
-  raw = raw
-    .replace(/(?<=:\s*")([^"]*?)\n([^"]*?)(?=")/g, '$1\\n$2')
-    .replace(/,(\s*[}\]])/g, '$1')
-    .replace(/"\s+"/g, '", "')
-    .replace(/}(\s*\n\s*){/g, '},{')
+  // 2) 用状态机边遍历边修：字符串内换行转义 + 数组内缺逗号插入 + 尾随逗号移除
+  const out = []
+  const stack = []    // 跟踪上下文: '{' 或 '['
+  let i = 0
+  let afterValue = false  // 上一个 token 是否是一个完整值（需要逗号或 ]/} 跟随）
 
-  return JSON.parse(raw)
+  while (i < raw.length) {
+    const ch = raw[i]
+
+    if (ch === '"') {
+      // ── 字符串：完整收集并转义内部换行 ──
+      out.push('"')
+      i++
+      while (i < raw.length) {
+        if (raw[i] === '\\' && i + 1 < raw.length) {
+          out.push(raw[i], raw[i + 1])
+          i += 2
+        } else if (raw[i] === '"') {
+          out.push('"')
+          afterValue = true
+          i++
+          break
+        } else if (raw[i] === '\n' || raw[i] === '\r') {
+          out.push('\\n')
+          if (raw[i] === '\r' && raw[i + 1] === '\n') i++
+          i++
+          // 跳过换行后的缩进空白
+          while (i < raw.length && (raw[i] === ' ' || raw[i] === '\t')) i++
+        } else if (raw[i] === '\t') {
+          out.push('\\t')
+          i++
+        } else {
+          out.push(raw[i])
+          i++
+        }
+      }
+      continue
+    }
+
+    // ── 数字 / true / false / null ──
+    if (afterValue && isValueStart(ch) && stack.length > 0 && stack[stack.length - 1] === '[') {
+      // 数组内两个值之间缺逗号
+      out.push(', ')
+    }
+
+    if (ch === '{' || ch === '[') {
+      if (afterValue && stack.length > 0 && stack[stack.length - 1] === '[') {
+        out.push(', ')
+      }
+      stack.push(ch)
+      out.push(ch)
+      afterValue = false
+    } else if (ch === '}' || ch === ']') {
+      // 移除值后的尾随逗号: ,}
+      if (afterValue === false) {
+        // 没有值就直接闭合，去除之前可能多余的逗号
+        let j = out.length - 1
+        while (j >= 0 && (out[j] === ' ' || out[j] === '\n')) j--
+        if (j >= 0 && out[j] === ',') {
+          out.splice(j, 1)
+        }
+      }
+      stack.pop()
+      out.push(ch)
+      afterValue = true
+    } else if (ch === ',') {
+      out.push(ch)
+      afterValue = false
+    } else if (ch === ' ' || ch === '\n' || ch === '\r' || ch === '\t') {
+      // 空白：缩减为一个空格，避免破坏字符串外结构
+      if (out.length > 0 && out[out.length - 1] !== ' ' && out[out.length - 1] !== '\n') {
+        out.push(' ')
+      }
+    } else if (ch === ':') {
+      out.push(ch)
+      afterValue = false
+    } else {
+      // 数字 / t / f / n 组成部分
+      out.push(ch)
+    }
+    i++
+  }
+
+  let fixed = out.join('')
+
+  // 最终清理：移除值后闭合前的尾随逗号
+  fixed = fixed.replace(/,(\s*[}\]])/g, '$1')
+
+  try { return JSON.parse(fixed) } catch (e) {
+    throw new Error(`JSON 解析失败: ${e.message}`)
+  }
+}
+
+function isValueStart(ch) {
+  return ch === '"' || ch === '{' || ch === '[' || ch === 't' || ch === 'f' || ch === 'n' ||
+    (ch >= '0' && ch <= '9') || ch === '-'
 }
 
 // ==================== 年代/曲库约束 ====================

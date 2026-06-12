@@ -2,30 +2,78 @@ import { callDeepSeek } from './deepseek.js'
 
 // ==================== Profile storage ====================
 
+const STORAGE_KEYS = {
+  personality: 'personality_profile',
+  music: 'music_taste_result',
+  iqeq: 'iqeq_profile',
+  playlist: 'playlist_result',
+}
+
+/** 双读：先 sessionStorage（当前会话），若无则 localStorage（历史记录） */
+function getFromStorage(key) {
+  try {
+    const s = sessionStorage.getItem(key)
+    if (s) return JSON.parse(s)
+    const l = localStorage.getItem(key)
+    if (l) return JSON.parse(l)
+  } catch {}
+  return null
+}
+
+/** 双写：同时写入 sessionStorage 和 localStorage，附带时间戳 */
+function setToStorage(key, data) {
+  const payload = { ...data, ts: Date.now() }
+  const raw = JSON.stringify(payload)
+  try { sessionStorage.setItem(key, raw) } catch {}
+  try { localStorage.setItem(key, raw) } catch {}
+}
+
 export function getPersonalityProfile() {
-  try { return JSON.parse(sessionStorage.getItem('personality_profile')) } catch { return null }
+  return getFromStorage(STORAGE_KEYS.personality)
 }
 
 export function setPersonalityProfile(data) {
-  sessionStorage.setItem('personality_profile', JSON.stringify(data))
+  setToStorage(STORAGE_KEYS.personality, data)
 }
 
 export function getMusicResult() {
-  try { return JSON.parse(sessionStorage.getItem('music_taste_result')) } catch { return null }
+  return getFromStorage(STORAGE_KEYS.music)
+}
+
+export function setMusicResult(data) {
+  setToStorage(STORAGE_KEYS.music, data)
 }
 
 export function hasBoth() {
   return !!(getPersonalityProfile() || getMusicResult() || getIQEQProfile())
 }
 
+export function getPlaylistResult() {
+  return getFromStorage(STORAGE_KEYS.playlist)
+}
+
+export function setPlaylistResult(data) {
+  setToStorage(STORAGE_KEYS.playlist, data)
+}
+
+/** 获取测试记录摘要：哪些测试已完成 */
+export function getTestRecords() {
+  return {
+    personality: !!getPersonalityProfile(),
+    music: !!getMusicResult(),
+    iqeq: !!getIQEQProfile(),
+    playlist: !!getPlaylistResult(),
+  }
+}
+
 // ==================== IQ / EQ ====================
 
 export function getIQEQProfile() {
-  try { return JSON.parse(sessionStorage.getItem('iqeq_profile')) } catch { return null }
+  return getFromStorage(STORAGE_KEYS.iqeq)
 }
 
 export function setIQEQProfile(iq, eq) {
-  sessionStorage.setItem('iqeq_profile', JSON.stringify({ iq, eq }))
+  setToStorage(STORAGE_KEYS.iqeq, { iq, eq })
 }
 
 // ==================== Export / Import ====================
@@ -172,13 +220,92 @@ function extractJson(text) {
   const braceEnd = raw.lastIndexOf('}')
   if (braceStart !== -1 && braceEnd > braceStart) raw = raw.slice(braceStart, braceEnd + 1)
 
+  // 1) 直接解析
   try { return JSON.parse(raw) } catch {}
 
-  raw = raw
-    .replace(/(?<=:\s*")([^"]*?)\n([^"]*?)(?=")/g, '$1\\n$2')
-    .replace(/,(\s*[}\]])/g, '$1')
-    .replace(/"\s+"/g, '", "')
-    .replace(/}(\s*\n\s*){/g, '},{')
+  // 2) 用状态机边遍历边修：字符串内换行转义 + 数组内缺逗号插入 + 尾随逗号移除
+  const out = []
+  const stack = []
+  let i = 0
+  let afterValue = false
 
-  return JSON.parse(raw)
+  while (i < raw.length) {
+    const ch = raw[i]
+
+    if (ch === '"') {
+      out.push('"')
+      i++
+      while (i < raw.length) {
+        if (raw[i] === '\\' && i + 1 < raw.length) {
+          out.push(raw[i], raw[i + 1])
+          i += 2
+        } else if (raw[i] === '"') {
+          out.push('"')
+          afterValue = true
+          i++
+          break
+        } else if (raw[i] === '\n' || raw[i] === '\r') {
+          out.push('\\n')
+          if (raw[i] === '\r' && raw[i + 1] === '\n') i++
+          i++
+          while (i < raw.length && (raw[i] === ' ' || raw[i] === '\t')) i++
+        } else if (raw[i] === '\t') {
+          out.push('\\t')
+          i++
+        } else {
+          out.push(raw[i])
+          i++
+        }
+      }
+      continue
+    }
+
+    // 数字 / true / false / null 开头
+    if (afterValue && isValueStart(ch) && stack.length > 0 && stack[stack.length - 1] === '[') {
+      out.push(', ')
+    }
+
+    if (ch === '{' || ch === '[') {
+      if (afterValue && stack.length > 0 && stack[stack.length - 1] === '[') {
+        out.push(', ')
+      }
+      stack.push(ch)
+      out.push(ch)
+      afterValue = false
+    } else if (ch === '}' || ch === ']') {
+      if (!afterValue) {
+        let j = out.length - 1
+        while (j >= 0 && out[j] === ' ') j--
+        if (j >= 0 && out[j] === ',') out.splice(j, 1)
+      }
+      stack.pop()
+      out.push(ch)
+      afterValue = true
+    } else if (ch === ',') {
+      out.push(ch)
+      afterValue = false
+    } else if (ch === ' ' || ch === '\n' || ch === '\r' || ch === '\t') {
+      if (out.length > 0 && out[out.length - 1] !== ' ') {
+        out.push(' ')
+      }
+    } else if (ch === ':') {
+      out.push(ch)
+      afterValue = false
+    } else {
+      out.push(ch)
+    }
+    i++
+  }
+
+  let fixed = out.join('')
+  fixed = fixed.replace(/,(\s*[}\]])/g, '$1')
+
+  try { return JSON.parse(fixed) } catch (e) {
+    throw new Error(`JSON 解析失败: ${e.message}`)
+  }
+}
+
+function isValueStart(ch) {
+  return ch === '"' || ch === '{' || ch === '[' || ch === 't' || ch === 'f' || ch === 'n' ||
+    (ch >= '0' && ch <= '9') || ch === '-'
 }

@@ -146,8 +146,9 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { fileToBase64, ocrImage, analyzeText } from '../utils/playlist.js'
+import { getPlaylistResult, setPlaylistResult } from '../utils/profile.js'
 
 const activeTab = ref('image')
 const imagePreview = ref(null)
@@ -196,6 +197,7 @@ async function submitImage() {
     loadingText.value = 'AI 正在分析你的歌单品味...'
     loadingSub.value = `已识别 ${ocrText.length} 个字符，正在解码品味...`
     result.value = await analyzeText(ocrText)
+    setPlaylistResult(result.value)
   } catch (e) { errorMsg.value = e.message || String(e) }
   finally { analyzing.value = false; loading.value = false }
 }
@@ -204,7 +206,10 @@ async function submitText() {
   if (!textInput.value.trim()) return
   analyzing.value = true; loading.value = true; errorMsg.value = ''
   loadingText.value = 'AI 正在解析文本并分析品味...'
-  try { result.value = await analyzeText(textInput.value) }
+  try {
+    result.value = await analyzeText(textInput.value)
+    setPlaylistResult(result.value)
+  }
   catch (e) { errorMsg.value = e.message || String(e) }
   finally { analyzing.value = false; loading.value = false }
 }
@@ -213,6 +218,12 @@ function reset() {
   result.value = null; imagePreview.value = null; imageBase64.value = null
   textInput.value = ''; errorMsg.value = ''; ocrProgress.value = 0
 }
+
+// mount 时尝试恢复历史结果
+onMounted(() => {
+  const saved = getPlaylistResult()
+  if (saved) result.value = saved
+})
 </script>
 
 <style scoped>

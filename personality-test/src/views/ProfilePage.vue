@@ -32,7 +32,7 @@
       <div class="dual-columns">
         <!-- 人格 -->
         <section v-if="personality" class="col-card personality-col">
-          <h3 @click="$router.push('/test')">🧠 大五人格 <span class="col-action">→</span></h3>
+          <h3 @click="$router.push('/result')">🧠 大五人格 <span class="col-action">→</span></h3>
           <div class="dim-bars">
             <div class="dim-row" v-for="dim in dims" :key="dim.key">
               <span class="dim-emoji">{{ dim.emoji }}</span>
@@ -46,7 +46,7 @@
 
         <!-- 音乐 -->
         <section v-if="musicResult" class="col-card music-col">
-          <h3 @click="$router.push('/music-test')">🎵 音乐品味 <span class="col-action">→</span></h3>
+          <h3 @click="$router.push('/music-result')">🎵 音乐品味 <span class="col-action">→</span></h3>
           <div class="music-score-row">
             <div class="mini-score-circle">
               <span class="mini-score-num">{{ musicResult.score }}</span>
@@ -61,7 +61,7 @@
 
         <!-- IQ/EQ -->
         <section v-if="iqeq" class="col-card iqeq-col">
-          <h3 @click="$router.push('/iqeq')">🧬 智商·情商 <span class="col-action">→</span></h3>
+          <h3 @click="$router.push('/iqeq-result')">🧬 智商·情商 <span class="col-action">→</span></h3>
           <div class="iqeq-dual">
             <div class="iqeq-item" v-if="iqeq.iq">
               <div class="iqeq-mini-circle iq-mini">{{ iqeq.iq.iq }}</div>

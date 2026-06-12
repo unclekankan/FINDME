@@ -34,6 +34,7 @@
 
         <h1 class="taste-label">{{ result.tasteLabel }}</h1>
         <p class="taste-summary">"{{ result.summary }}"</p>
+        <p class="taste-date" v-if="testDate">测试完成于 {{ testDate }}</p>
       </section>
 
       <!-- 分析 -->
@@ -103,20 +104,28 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { getMusicResult } from '../utils/profile.js'
 
 const router = useRouter()
 const result = ref(null)
+const testDate = ref('')
 
 onMounted(() => {
-  const raw = sessionStorage.getItem('music_taste_result')
+  // 优先 sessionStorage，fallback 到 localStorage（通过 profile.js 的 getMusicResult）
+  const raw = sessionStorage.getItem('music_taste_result') || localStorage.getItem('music_taste_result')
   if (raw) {
     try {
-      result.value = JSON.parse(raw)
-    } catch {
-      result.value = null
-    }
+      const parsed = JSON.parse(raw)
+      result.value = parsed
+      testDate.value = formatDate(parsed.ts || Date.now())
+    } catch { result.value = null }
   }
 })
+
+function formatDate(ts) {
+  const d = new Date(ts)
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`
+}
 
 const scoreColor = computed(() => {
   const s = result.value?.score || 0
@@ -224,6 +233,11 @@ function retake() {
   font-style: italic;
   font-size: 0.95rem;
   line-height: 1.7;
+}
+.taste-date {
+  margin-top: 0.6rem;
+  font-size: 0.75rem;
+  color: rgba(240, 230, 211, 0.3);
 }
 
 /* ===== 通用区块 ===== */

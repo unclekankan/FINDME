@@ -25,29 +25,92 @@ function extractJson(text) {
     raw = raw.slice(braceStart, braceEnd + 1)
   }
 
-  // 3. 尝试直接解析
+  // 3. 直接解析
   try { return JSON.parse(raw) } catch {}
 
-  // 4. 修复常见 JSON 错误后重试
-  raw = raw
-    // 修复：字符串值中的裸换行 → \n
-    .replace(/(?<=:\s*")([^"]*?)\n([^"]*?)(?=")/g, '$1\\n$2')
-    // 修复：数组/对象末尾多余逗号
-    .replace(/,(\s*[}\]])/g, '$1')
-    // 修复：缺少逗号 — 两个字符串之间
-    .replace(/"\s+"/g, '", "')
-    // 修复：对象之间缺少逗号
-    .replace(/}(\s*\n\s*){/g, '},{')
+  // 4. 状态机修复：字符串内换行转义 + 数组内缺逗号插入 + 尾随逗号移除
+  const out = []
+  const stack = []
+  let i = 0
+  let afterValue = false
 
-  try { return JSON.parse(raw) } catch (e) {
+  while (i < raw.length) {
+    const ch = raw[i]
+
+    if (ch === '"') {
+      out.push('"')
+      i++
+      while (i < raw.length) {
+        if (raw[i] === '\\' && i + 1 < raw.length) {
+          out.push(raw[i], raw[i + 1])
+          i += 2
+        } else if (raw[i] === '"') {
+          out.push('"')
+          afterValue = true
+          i++
+          break
+        } else if (raw[i] === '\n' || raw[i] === '\r') {
+          out.push('\\n')
+          if (raw[i] === '\r' && raw[i + 1] === '\n') i++
+          i++
+          while (i < raw.length && (raw[i] === ' ' || raw[i] === '\t')) i++
+        } else if (raw[i] === '\t') {
+          out.push('\\t')
+          i++
+        } else {
+          out.push(raw[i])
+          i++
+        }
+      }
+      continue
+    }
+
+    // 数字 / true / false / null 开头 — 数组内缺逗号
+    if (afterValue && isValueStart(ch) && stack.length > 0 && stack[stack.length - 1] === '[') {
+      out.push(', ')
+    }
+
+    if (ch === '{' || ch === '[') {
+      if (afterValue && stack.length > 0 && stack[stack.length - 1] === '[') {
+        out.push(', ')
+      }
+      stack.push(ch)
+      out.push(ch)
+      afterValue = false
+    } else if (ch === '}' || ch === ']') {
+      if (!afterValue) {
+        let j = out.length - 1
+        while (j >= 0 && out[j] === ' ') j--
+        if (j >= 0 && out[j] === ',') out.splice(j, 1)
+      }
+      stack.pop()
+      out.push(ch)
+      afterValue = true
+    } else if (ch === ',') {
+      out.push(ch)
+      afterValue = false
+    } else if (ch === ' ' || ch === '\n' || ch === '\r' || ch === '\t') {
+      if (out.length > 0 && out[out.length - 1] !== ' ') {
+        out.push(' ')
+      }
+    } else if (ch === ':') {
+      out.push(ch)
+      afterValue = false
+    } else {
+      out.push(ch)
+    }
+    i++
+  }
+
+  let fixed = out.join('')
+  fixed = fixed.replace(/,(\s*[}\]])/g, '$1')
+
+  try { return JSON.parse(fixed) } catch (e) {
     // 5. 彻底失败时截断 songs 数组重试
     const songsMatch = raw.match(/"songs"\s*:\s*\[([\s\S]*?)\](?=\s*[,}"])/)
     if (songsMatch) {
-      // 修复 songs 数组内的常见问题
       let songsPart = songsMatch[1]
-      // 确保数组元素以 },{ 正确分隔
       songsPart = songsPart.replace(/}(\s*\n?\s*){/g, '},{')
-      // 移除末尾逗号
       songsPart = songsPart.replace(/,(\s*)$/, '$1')
       const fixedRaw = raw.slice(0, songsMatch.index) +
         `"songs": [${songsPart}]` +
@@ -56,6 +119,11 @@ function extractJson(text) {
     }
     throw new Error(`JSON 解析失败: ${e.message}`)
   }
+}
+
+function isValueStart(ch) {
+  return ch === '"' || ch === '{' || ch === '[' || ch === 't' || ch === 'f' || ch === 'n' ||
+    (ch >= '0' && ch <= '9') || ch === '-'
 }
 
 // ==================== Tesseract OCR ====================

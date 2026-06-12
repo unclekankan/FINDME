@@ -107,6 +107,8 @@ function submit() {
   // 两边都做完了
   sessionStorage.setItem('iqeq_iq', JSON.stringify(iq))
   sessionStorage.setItem('iqeq_eq', JSON.stringify(eq))
+  localStorage.setItem('iqeq_iq', JSON.stringify(iq))
+  localStorage.setItem('iqeq_eq', JSON.stringify(eq))
   setIQEQProfile(iq, eq)
   router.push('/iqeq-result')
 }

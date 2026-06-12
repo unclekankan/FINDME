@@ -30,13 +30,18 @@
             <li><span class="check">📊</span> 雷达图+详细解读</li>
             <li><span class="check">⏱️</span> ~5 分钟</li>
           </ul>
-          <button class="card-btn btn-gold" @click="$router.push('/test')">
-            <span>开始测试</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="11" cy="11" r="7"/>
-              <path d="m16 16 6 6"/>
-            </svg>
-          </button>
+          <div class="card-btns">
+            <button class="card-btn btn-gold" @click="$router.push('/test')">
+              <span>开始测试</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="7"/>
+                <path d="m16 16 6 6"/>
+              </svg>
+            </button>
+            <button v-if="done.personality" class="card-btn btn-outline-gold" @click="$router.push('/result')">
+              📊 查看结果
+            </button>
+          </div>
         </div>
 
         <!-- 音乐品味 -->
@@ -51,13 +56,18 @@
             <li><span class="check">📊</span> 犀利品味评分</li>
             <li><span class="check">⏱️</span> ~5 分钟</li>
           </ul>
-          <button class="card-btn btn-green" @click="$router.push('/music-test')">
-            <span>开始测试</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="11" cy="11" r="7"/>
-              <path d="m16 16 6 6"/>
-            </svg>
-          </button>
+          <div class="card-btns">
+            <button class="card-btn btn-green" @click="$router.push('/music-test')">
+              <span>开始测试</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="7"/>
+                <path d="m16 16 6 6"/>
+              </svg>
+            </button>
+            <button v-if="done.music" class="card-btn btn-outline-green" @click="$router.push('/music-result')">
+              📊 查看结果
+            </button>
+          </div>
         </div>
 
         <!-- 智商情商 -->
@@ -72,13 +82,18 @@
             <li><span class="check">📊</span> 标准 IQ 估值 + EQ 维度分析</li>
             <li><span class="check">⏱️</span> ~10 分钟</li>
           </ul>
-          <button class="card-btn btn-blue" @click="$router.push('/iqeq')">
-            <span>开始测试</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="11" cy="11" r="7"/>
-              <path d="m16 16 6 6"/>
-            </svg>
-          </button>
+          <div class="card-btns">
+            <button class="card-btn btn-blue" @click="$router.push('/iqeq')">
+              <span>开始测试</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="7"/>
+                <path d="m16 16 6 6"/>
+              </svg>
+            </button>
+            <button v-if="done.iqeq" class="card-btn btn-outline-blue" @click="$router.push('/iqeq-result')">
+              📊 查看结果
+            </button>
+          </div>
         </div>
 
         <!-- 歌单分析 -->
@@ -93,13 +108,18 @@
             <li><span class="check">🎯</span> 品味画像+推荐</li>
             <li><span class="check">⚡</span> ~30 秒出结果</li>
           </ul>
-          <button class="card-btn btn-purple" @click="$router.push('/playlist')">
-            <span>开始分析</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="11" cy="11" r="7"/>
-              <path d="m16 16 6 6"/>
-            </svg>
-          </button>
+          <div class="card-btns">
+            <button class="card-btn btn-purple" @click="$router.push('/playlist')">
+              <span>开始分析</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="7"/>
+                <path d="m16 16 6 6"/>
+              </svg>
+            </button>
+            <button v-if="done.playlist" class="card-btn btn-outline-purple" @click="$router.push('/playlist')">
+              📊 查看结果
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -107,12 +127,21 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
+import { getTestRecords } from '../utils/profile.js'
+
 const allIcons = ['👑', '⚔️', '🎨', '🔬', '📜', '🌙', '🍶', '🎋', '⚛️', '🏛️', '🌻', '🕊️', '🎵', '🎸', '🎹', '🎧', '🎼', '🥁', '📋', '💿']
 
 const bgIcons = Array.from({ length: 18 }, (_, i) => ({
   id: i, icon: allIcons[i],
   style: { top: `${Math.random() * 90}%`, left: `${Math.random() * 90}%`, fontSize: `${1 + Math.random() * 2.5}rem`, opacity: 0.04 + Math.random() * 0.07 },
 }))
+
+const done = ref({ personality: false, music: false, iqeq: false, playlist: false })
+
+onMounted(() => {
+  Object.assign(done.value, getTestRecords())
+})
 </script>
 
 <style scoped>
@@ -161,7 +190,9 @@ const bgIcons = Array.from({ length: 18 }, (_, i) => ({
 .card-features li { font-size: 0.82rem; color: rgba(240,230,211,0.65); display: flex; align-items: center; gap: 0.4rem; }
 .check { flex-shrink: 0; }
 
-.card-btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.65rem 1.6rem; font-size: 0.9rem; font-weight: 700; border: none; border-radius: 50px; cursor: pointer; transition: transform 0.3s, box-shadow 0.3s; }
+.card-btns { display: flex; flex-direction: column; align-items: center; gap: 0.55rem; }
+
+.card-btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.65rem 1.6rem; font-size: 0.9rem; font-weight: 700; border: none; border-radius: 50px; cursor: pointer; transition: transform 0.3s, box-shadow 0.3s; text-decoration: none; font-family: inherit; }
 .card-btn:hover { transform: translateY(-2px); }
 .btn-gold { color: #0f0c29; background: linear-gradient(135deg,#e2c488,#c9974a); box-shadow: 0 4px 18px rgba(226,196,136,0.2); }
 .btn-gold:hover { box-shadow: 0 6px 26px rgba(226,196,136,0.35); }
@@ -171,6 +202,16 @@ const bgIcons = Array.from({ length: 18 }, (_, i) => ({
 .btn-purple:hover { box-shadow: 0 6px 26px rgba(186,150,240,0.35); }
 .btn-blue { color: #fff; background: linear-gradient(135deg,#64b4ff,#3b82f6); box-shadow: 0 4px 18px rgba(100,180,255,0.2); }
 .btn-blue:hover { box-shadow: 0 6px 26px rgba(100,180,255,0.35); }
+
+/* outline buttons for "查看结果" */
+.btn-outline-gold { padding: 0.5rem 1.2rem; font-size: 0.82rem; background: transparent; color: #e2c488; border: 1.5px solid rgba(226,196,136,0.35); }
+.btn-outline-gold:hover { background: rgba(226,196,136,0.12); border-color: rgba(226,196,136,0.6); }
+.btn-outline-green { padding: 0.5rem 1.2rem; font-size: 0.82rem; background: transparent; color: #81c784; border: 1.5px solid rgba(129,199,132,0.35); }
+.btn-outline-green:hover { background: rgba(129,199,132,0.12); border-color: rgba(129,199,132,0.6); }
+.btn-outline-blue { padding: 0.5rem 1.2rem; font-size: 0.82rem; background: transparent; color: #64b4ff; border: 1.5px solid rgba(100,180,255,0.35); }
+.btn-outline-blue:hover { background: rgba(100,180,255,0.12); border-color: rgba(100,180,255,0.6); }
+.btn-outline-purple { padding: 0.5rem 1.2rem; font-size: 0.82rem; background: transparent; color: #ba96f0; border: 1.5px solid rgba(186,150,240,0.35); }
+.btn-outline-purple:hover { background: rgba(186,150,240,0.12); border-color: rgba(186,150,240,0.6); }
 
 @media (max-width: 800px) {
   .test-cards { grid-template-columns: 1fr; max-width: 440px; margin: 0 auto; }

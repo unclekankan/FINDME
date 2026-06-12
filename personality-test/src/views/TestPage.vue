@@ -105,7 +105,9 @@ function goBack() {
 
 function submitTest() {
   const result = calculateType(answers.value)
-  sessionStorage.setItem('personality_answers', JSON.stringify(answers.value))
+  const answersJson = JSON.stringify(answers.value)
+  sessionStorage.setItem('personality_answers', answersJson)
+  localStorage.setItem('personality_answers', answersJson)
   setPersonalityProfile(result)
   router.push('/result')
 }
