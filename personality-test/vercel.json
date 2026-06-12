@@ -1,6 +1,6 @@
 {
   "installCommand": "npm install",
-  "buildCommand": "node build.js",
+  "buildCommand": "npx vite build",
   "outputDirectory": "dist",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
