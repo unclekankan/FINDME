@@ -60,6 +60,8 @@
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { questions, dimensions } from '../data/questions.js'
+import { calculateType } from '../utils/scoring.js'
+import { setPersonalityProfile } from '../utils/profile.js'
 
 const router = useRouter()
 const currentIndex = ref(0)
@@ -102,7 +104,9 @@ function goBack() {
 }
 
 function submitTest() {
+  const result = calculateType(answers.value)
   sessionStorage.setItem('personality_answers', JSON.stringify(answers.value))
+  setPersonalityProfile(result)
   router.push('/result')
 }
 </script>

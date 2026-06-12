@@ -12,7 +12,7 @@
         <span class="highlight">让测试来告诉你</span>
       </h1>
       <p class="hero-desc">
-        三个工具，从人格、品味、歌单三个维度探索你的内在——
+        四个工具，从人格、品味、歌单、智商与情商多个维度探索你的内在——
         <br />
         用科学量表和 AI 解码独一无二的你。
       </p>
@@ -52,6 +52,27 @@
             <li><span class="check">⏱️</span> ~5 分钟</li>
           </ul>
           <button class="card-btn btn-green" @click="$router.push('/music-test')">
+            <span>开始测试</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="7"/>
+              <path d="m16 16 6 6"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- 智商情商 -->
+        <div class="test-card card-iqeq">
+          <div class="card-glow"></div>
+          <div class="card-icon-wrapper"><span class="card-icon">🧬</span></div>
+          <h2 class="card-title">智商·情商测试</h2>
+          <p class="card-subtitle">IQ 逻辑推理 + EQ 情绪智力</p>
+          <ul class="card-features">
+            <li><span class="check">🧠</span> 20 道 IQ 逻辑推理题</li>
+            <li><span class="check">💗</span> 20 道 EQ 情景自评题</li>
+            <li><span class="check">📊</span> 标准 IQ 估值 + EQ 维度分析</li>
+            <li><span class="check">⏱️</span> ~10 分钟</li>
+          </ul>
+          <button class="card-btn btn-blue" @click="$router.push('/iqeq')">
             <span>开始测试</span>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="11" cy="11" r="7"/>
@@ -105,17 +126,19 @@ const bgIcons = Array.from({ length: 18 }, (_, i) => ({
 .hero-desc { color: rgba(240,230,211,0.55); font-size: 0.95rem; line-height: 1.7; margin-bottom: 2rem; }
 
 /* cards grid */
-.test-cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.2rem; }
+.test-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.2rem; }
 .test-card { position: relative; background: rgba(255,255,255,0.04); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 1.6rem 1.3rem; text-align: center; transition: transform 0.4s, border-color 0.4s, box-shadow 0.4s; overflow: hidden; }
 .test-card:hover { transform: translateY(-5px); }
 .card-personality:hover { border-color: rgba(226,196,136,0.35); box-shadow: 0 8px 36px rgba(226,196,136,0.1); }
 .card-music:hover { border-color: rgba(129,199,132,0.35); box-shadow: 0 8px 36px rgba(129,199,132,0.1); }
 .card-playlist:hover { border-color: rgba(186,150,240,0.35); box-shadow: 0 8px 36px rgba(186,150,240,0.1); }
+.card-iqeq:hover { border-color: rgba(100,180,255,0.35); box-shadow: 0 8px 36px rgba(100,180,255,0.1); }
 
 .card-glow { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 160px; height: 2px; border-radius: 50%; opacity: 0; transition: opacity 0.4s; }
 .card-personality .card-glow { background: radial-gradient(ellipse, rgba(226,196,136,0.6), transparent); }
 .card-music .card-glow { background: radial-gradient(ellipse, rgba(129,199,132,0.6), transparent); }
 .card-playlist .card-glow { background: radial-gradient(ellipse, rgba(186,150,240,0.6), transparent); }
+.card-iqeq .card-glow { background: radial-gradient(ellipse, rgba(100,180,255,0.6), transparent); }
 .test-card:hover .card-glow { opacity: 1; }
 
 .card-icon-wrapper { margin-bottom: 0.8rem; }
@@ -123,12 +146,14 @@ const bgIcons = Array.from({ length: 18 }, (_, i) => ({
 .card-personality .card-icon { animation-delay: 0s; }
 .card-music .card-icon { animation-delay: 0.4s; }
 .card-playlist .card-icon { animation-delay: 0.8s; }
+.card-iqeq .card-icon { animation-delay: 1.2s; }
 @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
 
 .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.25rem; }
 .card-personality .card-title { color: #e2c488; }
 .card-music .card-title { color: #81c784; }
 .card-playlist .card-title { color: #ba96f0; }
+.card-iqeq .card-title { color: #64b4ff; }
 
 .card-subtitle { font-size: 0.78rem; color: rgba(240,230,211,0.4); margin-bottom: 1rem; }
 
@@ -144,9 +169,11 @@ const bgIcons = Array.from({ length: 18 }, (_, i) => ({
 .btn-green:hover { box-shadow: 0 6px 26px rgba(129,199,132,0.35); }
 .btn-purple { color: #0f0c29; background: linear-gradient(135deg,#ba96f0,#7c5ce0); box-shadow: 0 4px 18px rgba(186,150,240,0.2); }
 .btn-purple:hover { box-shadow: 0 6px 26px rgba(186,150,240,0.35); }
+.btn-blue { color: #fff; background: linear-gradient(135deg,#64b4ff,#3b82f6); box-shadow: 0 4px 18px rgba(100,180,255,0.2); }
+.btn-blue:hover { box-shadow: 0 6px 26px rgba(100,180,255,0.35); }
 
 @media (max-width: 800px) {
-  .test-cards { grid-template-columns: 1fr; max-width: 400px; margin: 0 auto; }
+  .test-cards { grid-template-columns: 1fr; max-width: 440px; margin: 0 auto; }
   .test-card { padding: 1.3rem 1.2rem; }
 }
 </style>

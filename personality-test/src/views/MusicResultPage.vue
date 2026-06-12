@@ -92,12 +92,9 @@
 
       <!-- 操作 -->
       <section class="actions">
-        <button class="action-btn retake-btn" @click="retake">
-          🔄 重新测试
-        </button>
-        <button class="action-btn home-btn" @click="$router.push('/')">
-          🏠 回到首页
-        </button>
+        <button class="action-btn retake-btn" @click="retake">🔄 重新测试</button>
+        <button class="action-btn profile-btn" @click="$router.push('/profile')">👤 查看我的画像</button>
+        <button class="action-btn home-btn" @click="$router.push('/')">🏠 回到首页</button>
       </section>
     </template>
   </div>
@@ -382,11 +379,9 @@ section {
 }
 .retake-btn:hover { background: rgba(255, 255, 255, 0.15); }
 
-.home-btn {
-  background: linear-gradient(135deg, #81c784, #4caf50);
-  color: #0f0c29;
-  font-weight: 700;
-}
+.profile-btn { background: rgba(186,150,240,0.1); color: #ba96f0; border: 1px solid rgba(186,150,240,0.2); }
+.profile-btn:hover { background: rgba(186,150,240,0.18); }
+.home-btn { background: linear-gradient(135deg, #81c784, #4caf50); color: #0f0c29; font-weight: 700; }
 .home-btn:hover { box-shadow: 0 4px 24px rgba(129, 199, 132, 0.4); }
 
 @media (max-width: 500px) {
