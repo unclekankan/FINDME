@@ -1,32 +1,5 @@
 <template>
   <div class="music-test-page">
-    <!-- ====== Key 输入 ====== -->
-    <div v-if="stage === 'key'" class="key-screen">
-      <div class="key-card">
-        <span class="key-emoji">🔑</span>
-        <h2>需要 DeepSeek API Key</h2>
-        <p class="key-desc">
-          本测试使用 DeepSeek AI 驱动，每次选择都会影响后续题目，
-          最终给出客观犀利的品味评价。
-        </p>
-        <div class="key-input-row">
-          <input
-            v-model="apiKeyInput"
-            type="password"
-            placeholder="sk-xxxxxxxxxxxxxxxx"
-            class="key-input"
-            @keyup.enter="saveKey"
-          />
-          <button class="key-btn" @click="saveKey" :disabled="!apiKeyInput.trim()">确认</button>
-        </div>
-        <p class="key-hint">
-          <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">去 DeepSeek 获取 Key →</a>
-        </p>
-        <button class="back-link" @click="$router.push('/')">← 返回首页</button>
-        <div v-if="keyError" class="key-error">{{ keyError }}</div>
-      </div>
-    </div>
-
     <!-- ====== 测试中 ====== -->
     <template v-if="stage === 'testing'">
       <header class="test-header">
@@ -177,19 +150,17 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { getApiKey, setApiKey, generateNextPair, generateFinalEvaluation } from '../utils/deepseek.js'
+import { generateNextPair, generateFinalEvaluation } from '../utils/deepseek.js'
 import { fetchSongPreview } from '../utils/audio.js'
 
 const router = useRouter()
 const TOTAL_ROUNDS = 15
 
-const stage = ref('key')
-const apiKeyInput = ref('')
-const keyError = ref('')
+const stage = ref('testing')
 const round = ref(1)
+const errorMsg = ref('')
 const selected = ref(null)
 const loading = ref(false)
-const errorMsg = ref('')
 const history = reactive([])
 const playingSong = ref(null)
 const audioLoading = ref(null)
@@ -240,16 +211,6 @@ const currentPair = reactive({
   songB: { title: '', artist: '', year: '', reason: '' },
   dimension: '',
 })
-
-// ===== Key =====
-function saveKey() {
-  const key = apiKeyInput.value.trim()
-  if (!key) return
-  if (!key.startsWith('sk-')) { keyError.value = 'Key 格式不正确，应以 sk- 开头'; return }
-  keyError.value = ''
-  setApiKey(key)
-  startTest()
-}
 
 async function startTest() {
   stage.value = 'testing'
@@ -410,14 +371,12 @@ function confirmQuit() {
 
 function handleError(e) {
   const msg = e.message || String(e)
-  if (msg === 'NO_API_KEY') return '请先设置 API Key'
-  if (msg === 'INVALID_API_KEY') { stage.value = 'key'; keyError.value = 'API Key 无效'; sessionStorage.removeItem('deepseek_api_key'); return '' }
   if (msg === 'INVALID_RESPONSE') return 'AI 返回数据异常，请重试'
   return `请求失败：${msg}`
 }
 
 // ===== 初始化 =====
-if (getApiKey()) startTest()
+startTest()
 </script>
 
 <style scoped>
@@ -426,23 +385,6 @@ if (getApiKey()) startTest()
   background: linear-gradient(180deg, #0f0c29 0%, #1a1a3e 40%, #24243e 100%);
   color: #f0e6d3;
 }
-
-/* key */
-.key-screen { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
-.key-card { background: rgba(255,255,255,0.05); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; padding: 2.5rem 2rem; max-width: 460px; width: 100%; text-align: center; }
-.key-emoji { font-size: 3.5rem; display: block; margin-bottom: 1rem; }
-.key-card h2 { font-size: 1.3rem; color: #81c784; margin-bottom: 0.8rem; }
-.key-desc { color: rgba(240,230,211,0.6); font-size: 0.9rem; line-height: 1.7; margin-bottom: 1.5rem; }
-.key-input-row { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; }
-.key-input { flex: 1; padding: 0.7rem 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.06); color: #f0e6d3; font-size: 0.9rem; outline: none; font-family: ui-monospace,Consolas,monospace; transition: border-color 0.3s; }
-.key-input:focus { border-color: #81c784; }
-.key-btn { padding: 0.7rem 1.5rem; border-radius: 12px; border: none; background: linear-gradient(135deg,#81c784,#4caf50); color: #0f0c29; font-weight: 700; cursor: pointer; white-space: nowrap; }
-.key-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.key-hint { font-size: 0.8rem; color: rgba(240,230,211,0.4); margin-bottom: 1rem; }
-.key-hint a { color: #81c784; text-decoration: none; }
-.key-error { margin-top: 1rem; padding: 0.6rem 1rem; border-radius: 10px; background: rgba(244,67,54,0.12); border: 1px solid rgba(244,67,54,0.2); color: #ef5350; font-size: 0.85rem; }
-.back-link { background: none; border: none; color: rgba(240,230,211,0.4); cursor: pointer; font-size: 0.85rem; margin-top: 0.5rem; }
-.back-link:hover { color: rgba(240,230,211,0.7); }
 
 /* header */
 .test-header { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.5rem; position: sticky; top: 0; background: rgba(15,12,41,0.85); backdrop-filter: blur(16px); z-index: 10; border-bottom: 1px solid rgba(255,255,255,0.06); }

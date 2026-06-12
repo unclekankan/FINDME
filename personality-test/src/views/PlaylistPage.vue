@@ -36,10 +36,6 @@
             </div>
           </div>
           <div v-if="errorMsg" class="error-msg">{{ errorMsg }}</div>
-          <div v-if="needKey" class="key-prompt">
-            <input v-model="apiKeyInput" type="password" placeholder="DeepSeek API Key: sk-..." class="key-input-inline" @keyup.enter="submitImage" />
-            <button class="key-save-btn" @click="submitImage" :disabled="!apiKeyInput.trim()">确认</button>
-          </div>
         </div>
 
         <!-- 文字 -->
@@ -53,10 +49,6 @@
             </button>
           </div>
           <div v-if="errorMsg" class="error-msg">{{ errorMsg }}</div>
-          <div v-if="needKey" class="key-prompt">
-            <input v-model="apiKeyInput" type="password" placeholder="DeepSeek API Key: sk-..." class="key-input-inline" @keyup.enter="submitText" />
-            <button class="key-save-btn" @click="submitText" :disabled="!apiKeyInput.trim()">确认</button>
-          </div>
         </div>
       </div>
     </template>
@@ -155,7 +147,6 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { getApiKey, setApiKey } from '../utils/deepseek.js'
 import { fileToBase64, ocrImage, analyzeText } from '../utils/playlist.js'
 
 const activeTab = ref('image')
@@ -166,8 +157,6 @@ const loading = ref(false)
 const analyzing = ref(false)
 const result = ref(null)
 const errorMsg = ref('')
-const apiKeyInput = ref('')
-const needKey = ref(false)
 const loadingText = ref('')
 const loadingSub = ref('')
 const ocrProgress = ref(0)
@@ -197,81 +186,32 @@ function clearImage() { imagePreview.value = null; imageBase64.value = null }
 // ===== 提交 =====
 async function submitImage() {
   if (!imageBase64.value) return
-  await ensureKey()
-  if (!getApiKey()) return
-
-  analyzing.value = true
-  loading.value = true
-  errorMsg.value = ''
-  needKey.value = false
-  ocrProgress.value = 0
+  analyzing.value = true; loading.value = true; errorMsg.value = ''; ocrProgress.value = 0
   loadingText.value = '正在 OCR 识别歌单文字...'
   loadingSub.value = 'Tesseract 引擎运行中（客户端，安全不联网）'
-
   try {
-    // 第1步：OCR 提取文字（客户端）
     const ocrText = await ocrImage(imageBase64.value)
     ocrProgress.value = 100
-
-    if (!ocrText || ocrText.length < 5) {
-      throw new Error('OCR 未识别到文字，请确保截图清晰，或改用文字导入。')
-    }
-
-    // 第2步：DeepSeek 分析
+    if (!ocrText || ocrText.length < 5) throw new Error('OCR 未识别到文字，请确保截图清晰，或改用文字导入。')
     loadingText.value = 'AI 正在分析你的歌单品味...'
     loadingSub.value = `已识别 ${ocrText.length} 个字符，正在解码品味...`
     result.value = await analyzeText(ocrText)
-  } catch (e) {
-    errorMsg.value = e.message || String(e)
-  } finally {
-    analyzing.value = false
-    loading.value = false
-  }
+  } catch (e) { errorMsg.value = e.message || String(e) }
+  finally { analyzing.value = false; loading.value = false }
 }
 
 async function submitText() {
   if (!textInput.value.trim()) return
-  await ensureKey()
-  if (!getApiKey()) return
-
-  analyzing.value = true
-  loading.value = true
-  errorMsg.value = ''
-  needKey.value = false
-  ocrProgress.value = 0
+  analyzing.value = true; loading.value = true; errorMsg.value = ''
   loadingText.value = 'AI 正在解析文本并分析品味...'
-  loadingSub.value = ''
-
-  try {
-    result.value = await analyzeText(textInput.value)
-  } catch (e) {
-    errorMsg.value = e.message || String(e)
-  } finally {
-    analyzing.value = false
-    loading.value = false
-  }
-}
-
-async function ensureKey() {
-  if (getApiKey()) return
-  const key = apiKeyInput.value.trim()
-  if (key && key.startsWith('sk-')) {
-    setApiKey(key)
-    needKey.value = false
-    return
-  }
-  needKey.value = true
-  // 让用户看到输入框后再按确认
+  try { result.value = await analyzeText(textInput.value) }
+  catch (e) { errorMsg.value = e.message || String(e) }
+  finally { analyzing.value = false; loading.value = false }
 }
 
 function reset() {
-  result.value = null
-  imagePreview.value = null
-  imageBase64.value = null
-  textInput.value = ''
-  errorMsg.value = ''
-  needKey.value = false
-  ocrProgress.value = 0
+  result.value = null; imagePreview.value = null; imageBase64.value = null
+  textInput.value = ''; errorMsg.value = ''; ocrProgress.value = 0
 }
 </script>
 

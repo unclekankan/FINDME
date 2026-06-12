@@ -4,18 +4,13 @@
 
 const API_URL = '/api/deepseek'
 
-export function getApiKey() {
-  return sessionStorage.getItem('deepseek_api_key') || ''
-}
-
-export function setApiKey(key) {
-  sessionStorage.setItem('deepseek_api_key', key)
-}
-
+/**
+ * 调用 DeepSeek API
+ * 开发环境：Vite proxy 用 .env 中的 key
+ * 生产环境：Vercel serverless function 用环境变量中的 key
+ * 用户无需输入 Key
+ */
 export async function callDeepSeek(messages, opts = {}) {
-  const apiKey = getApiKey()
-  if (!apiKey) throw new Error('NO_API_KEY')
-
   const body = {
     model: 'deepseek-chat',
     messages,
@@ -26,14 +21,13 @@ export async function callDeepSeek(messages, opts = {}) {
 
   const res = await fetch(API_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Api-Key': apiKey },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   })
 
   if (!res.ok) {
     const err = await res.text().catch(() => '')
-    if (res.status === 401) throw new Error('INVALID_API_KEY')
-    throw new Error(`API_ERROR: ${res.status} ${err.slice(0, 200)}`)
+    throw new Error(`API 错误 (${res.status}): ${err.slice(0, 200)}`)
   }
 
   const data = await res.json()

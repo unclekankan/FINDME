@@ -16,12 +16,7 @@ export default defineConfig(({ mode }) => {
           rewrite: (path) => path.replace(/^\/api\/deepseek/, '/v1/chat/completions'),
           configure: (proxy) => {
             proxy.on('proxyReq', (proxyReq, req) => {
-              // Use API key from request header first, fall back to env var
-              const apiKey = req.headers['x-api-key'] || deepseekApiKey
-              if (apiKey) {
-                proxyReq.setHeader('Authorization', `Bearer ${apiKey}`)
-              }
-              proxyReq.removeHeader('x-api-key')
+              proxyReq.setHeader('Authorization', `Bearer ${deepseekApiKey}`)
             })
           },
         },
