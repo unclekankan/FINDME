@@ -12,7 +12,7 @@ export function setApiKey(key) {
   sessionStorage.setItem('deepseek_api_key', key)
 }
 
-async function callDeepSeek(messages, opts = {}) {
+export async function callDeepSeek(messages, opts = {}) {
   const apiKey = getApiKey()
   if (!apiKey) throw new Error('NO_API_KEY')
 

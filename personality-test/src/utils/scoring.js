@@ -47,14 +47,3 @@ export function calculateType(answers) {
   return { rawScores, typeCode, profile }
 }
 
-export function getDimensionPercentages(profile) {
-  const result = {}
-  for (const dim of dimensions) {
-    result[dim.key] = {
-      percent: profile[dim.key].percent,
-      label: profile[dim.key].label,
-      level: profile[dim.key].level,
-    }
-  }
-  return result
-}

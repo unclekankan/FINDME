@@ -32,8 +32,9 @@
           </ul>
           <button class="card-btn btn-gold" @click="$router.push('/test')">
             <span>开始测试</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <path d="M5 12h14M12 5l7 7-7 7" />
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="7"/>
+              <path d="m16 16 6 6"/>
             </svg>
           </button>
         </div>
@@ -52,8 +53,9 @@
           </ul>
           <button class="card-btn btn-green" @click="$router.push('/music-test')">
             <span>开始测试</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <path d="M5 12h14M12 5l7 7-7 7" />
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="7"/>
+              <path d="m16 16 6 6"/>
             </svg>
           </button>
         </div>
@@ -72,8 +74,9 @@
           </ul>
           <button class="card-btn btn-purple" @click="$router.push('/playlist')">
             <span>开始分析</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <path d="M5 12h14M12 5l7 7-7 7" />
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="7"/>
+              <path d="m16 16 6 6"/>
             </svg>
           </button>
         </div>

@@ -105,12 +105,8 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
 import { dimensions } from '../data/questions.js'
 import { calculateType } from '../utils/scoring.js'
-
-const props = defineProps({ type: { type: String, default: '' } })
-const route = useRoute()
 const result = ref(null)
 
 onMounted(() => {

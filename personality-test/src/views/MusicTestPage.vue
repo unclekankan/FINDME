@@ -31,8 +31,8 @@
     <template v-if="stage === 'testing'">
       <header class="test-header">
         <button class="back-btn" @click="confirmQuit">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="M19 12H5M12 19l-7-7 7-7" />
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m15 18-6-6 6-6"/>
           </svg>
         </button>
         <div class="progress-bar-wrapper">
